@@ -80,6 +80,7 @@ Resources:
                   - codeconnections:UseConnection
                   - cloudformation:*
                   - ec2:*
+                  - rds:*
                 Resource: "*"
 
   PipelineRole:
