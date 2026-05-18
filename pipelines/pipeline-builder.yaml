@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Self-mutating pipeline builder for deploying nested CloudFormation stacks
+
+Parameters:
+  RepoOwner:
+    Type: String
+    Description: GitHub account or organization name
+
+  RepoName:
+    Type: String
+    Description: GitHub repository name
+
+  RepoBranch:
+    Type: String
+    Description: Branch to build from (dev, main, etc.)
+
+  CodeStarConnection:
+    Type: String
+    Description: CodeStar Connection ID (not ARN)
+    NoEcho: true
+
+  Environment:
+    Type: String
+    Description: Deployment environment
+    AllowedValues:
+      - dev
+      - test
+
+  PipelineParameterFileName:
+    Type: String
+    Description: Parameter file for this environment
+    AllowedValues:
+      - dev.json
+      - test.json
+
+  MainCodePipelineName:
+    Type: String
+    Description: Base name for the pipeline
+
+  ApplicationName:
+    Type: String
+    Default: landingzone
+
+Resources:
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+    DeletionPolicy: Retain
+
+  CFNRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudFormationExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - iam:*
+                  - logs:*
+                  - cloudwatch:*
+                  - events:*
+                  - codebuild:*
+                  - codepipeline:*
+                  - kms:*
+                  - sns:*
+                  - codestar-connections:*
+                  - codestar-notifications:*
+                  - codeconnections:UseConnection
+                Resource: "*"
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelineExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - cloudformation:*
+                  - iam:*
+                  - sns:*
+                  - kms:*
+                  - codestar-connections:*
+                  - codeconnections:UseConnection
+                  - logs:*
+                  - cloudwatch:*
+                  - events:*
+                  - ssm:*
+                  - codebuild:*
+                  - codepipeline:*
+                Resource: "*"
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "${MainCodePipelineName}-${Environment}"
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactStoreBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: GitHubSource
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              Configuration:
+                ConnectionArn: !Sub "arn:aws:codeconnections:${AWS::Region}:${AWS::AccountId}:connection/${CodeStarConnection}"
+                FullRepositoryId: !Sub "${RepoOwner}/${RepoName}"
+                BranchName: !Ref RepoBranch
+                OutputArtifactFormat: CODE_ZIP
+              OutputArtifacts:
+                - Name: SourceArtifact
+
+        - Name: Deploy
+          Actions:
+            - Name: CreateChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt CFNRole.Arn
+                StackName: !Sub "${ApplicationName}-root-${Environment}"
+                ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
+                TemplatePath: SourceArtifact::cloudformation/root-stack.yaml
+                TemplateConfiguration: !Sub "SourceArtifact::pipeline-params/${PipelineParameterFileName}"
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+              RunOrder: 1
+
+            - Name: ExecuteChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                RoleArn: !GetAtt CFNRole.Arn
+                StackName: !Sub "${ApplicationName}-root-${Environment}"
+                ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
+              RunOrder: 2
