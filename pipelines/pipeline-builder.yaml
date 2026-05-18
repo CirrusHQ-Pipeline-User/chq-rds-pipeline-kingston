@@ -79,6 +79,7 @@ Resources:
                   - codestar-notifications:*
                   - codeconnections:UseConnection
                   - cloudformation:*
+                  - ec2:*
                 Resource: "*"
 
   PipelineRole:
