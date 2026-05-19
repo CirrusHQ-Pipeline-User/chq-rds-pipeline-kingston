@@ -41,6 +41,9 @@ Parameters:
     Type: String
     Default: landingzone
 
+Conditions:
+  IsTest: !Equals [ !Ref Environment, test ]
+
 Resources:
   ArtifactStoreBucket:
     Type: AWS::S3::Bucket
@@ -160,6 +163,15 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               RunOrder: 1
 
+            - Name: WaitForApproval
+              Condition: IsTest
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: "1"
+              RunOrder: 2
+
             - Name: ExecuteChangeSet
               ActionTypeId:
                 Category: Deploy
@@ -173,4 +185,4 @@ Resources:
                 RoleArn: !GetAtt CFNRole.Arn
                 StackName: !Sub "${ApplicationName}-root-${Environment}"
                 ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
-              RunOrder: 2
+              RunOrder: 3
