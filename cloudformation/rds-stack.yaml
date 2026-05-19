@@ -45,7 +45,7 @@ Parameters:
     Default: ""
 
 Conditions:
-  # Only set KmsKeyId if a key was provided
+  # Only set KmsKeyId if a key is provided
   UseKmsKey: !Not [ !Equals [ !Ref KmsKeyArn, "" ] ]
 
 Resources:
