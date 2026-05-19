@@ -127,7 +127,6 @@ Resources:
         Type: S3
         Location: !Ref ArtifactStoreBucket
       Stages:
-
         # -------------------------
         # Source Stage
         # -------------------------
@@ -148,7 +147,7 @@ Resources:
                 - Name: SourceArtifact
 
         # -------------------------
-        # Create Change Set
+        # Create Change Set Stage
         # -------------------------
         - Name: Deploy
           Actions:
@@ -171,21 +170,23 @@ Resources:
               RunOrder: 1
 
         # -------------------------
-        # Manual Approval (test only)
+        # Conditional Manual Approval Stage
         # -------------------------
-        - Name: ManualApproval
-          Condition: IsTest
-          Actions:
-            - Name: WaitForApproval
-              ActionTypeId:
-                Category: Approval
-                Owner: AWS
-                Provider: Manual
-                Version: "1"
-              RunOrder: 1
+        - !If
+          - IsTest
+          - Name: ManualApproval
+            Actions:
+              - Name: WaitForApproval
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: "1"
+                RunOrder: 1
+          - !Ref AWS::NoValue
 
         # -------------------------
-        # Execute Change Set
+        # Execute Change Set Stage
         # -------------------------
         - Name: Execute
           Actions:
