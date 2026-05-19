@@ -127,6 +127,10 @@ Resources:
         Type: S3
         Location: !Ref ArtifactStoreBucket
       Stages:
+
+        # -------------------------
+        # Source Stage
+        # -------------------------
         - Name: Source
           Actions:
             - Name: GitHubSource
@@ -143,6 +147,9 @@ Resources:
               OutputArtifacts:
                 - Name: SourceArtifact
 
+        # -------------------------
+        # Create Change Set
+        # -------------------------
         - Name: Deploy
           Actions:
             - Name: CreateChangeSet
@@ -163,15 +170,25 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               RunOrder: 1
 
+        # -------------------------
+        # Manual Approval (test only)
+        # -------------------------
+        - Name: ManualApproval
+          Condition: IsTest
+          Actions:
             - Name: WaitForApproval
-              Condition: IsTest
               ActionTypeId:
                 Category: Approval
                 Owner: AWS
                 Provider: Manual
                 Version: "1"
-              RunOrder: 2
+              RunOrder: 1
 
+        # -------------------------
+        # Execute Change Set
+        # -------------------------
+        - Name: Execute
+          Actions:
             - Name: ExecuteChangeSet
               ActionTypeId:
                 Category: Deploy
@@ -185,4 +202,4 @@ Resources:
                 RoleArn: !GetAtt CFNRole.Arn
                 StackName: !Sub "${ApplicationName}-root-${Environment}"
                 ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
-              RunOrder: 3
+              RunOrder: 1
