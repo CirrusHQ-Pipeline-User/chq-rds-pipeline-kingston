@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Nested VPC stack called from root-stack.yaml
+Description: Nested VPC stack 
 
 Parameters:
   EnvironmentName:

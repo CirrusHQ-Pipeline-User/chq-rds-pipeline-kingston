@@ -4,25 +4,49 @@ Description: Nested RDS stack
 Parameters:
   EnvironmentName:
     Type: String
+
   DBName:
     Type: String
+
   DBUsername:
     Type: String
+
   DBPassword:
     Type: String
     NoEcho: true
+
   DBInstanceClass:
     Type: String
+
   AllocatedStorage:
     Type: Number
+
   Engine:
     Type: String
+
   PrivateSubnet1Id:
     Type: String
+
   PrivateSubnet2Id:
     Type: String
+
   VpcId:
     Type: String
+
+  # NEW — encryption toggle
+  StorageEncrypted:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+
+  # NEW — optional KMS key
+  KmsKeyArn:
+    Type: String
+    Default: ""
+
+Conditions:
+  # Only set KmsKeyId if a key is provided
+  UseKmsKey: !Not [ !Equals [ !Ref KmsKeyArn, "" ] ]
 
 Resources:
   DBSubnetGroup:
@@ -52,6 +76,13 @@ Resources:
       VPCSecurityGroups:
         - !Ref SecurityGroup
       PubliclyAccessible: false
+
+      # NEW — encryption settings
+      StorageEncrypted: !Equals [ !Ref StorageEncrypted, "true" ]
+      KmsKeyId: !If
+        - UseKmsKey
+        - !Ref KmsKeyArn
+        - !Ref AWS::NoValue
 
 Outputs:
   DBEndpoint:
