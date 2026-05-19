@@ -12,7 +12,7 @@ Parameters:
 
   RepoBranch:
     Type: String
-    Description: Branch to build from (dev, main, etc.)
+    Description: Branch to build from (test, prod, etc.)
 
   CodeStarConnection:
     Type: String
@@ -30,7 +30,7 @@ Parameters:
     Type: String
     Description: Parameter file for this environment
     AllowedValues:
-      - dev.json
+      - prod.json
       - test.json
 
   MainCodePipelineName:
@@ -40,6 +40,9 @@ Parameters:
   ApplicationName:
     Type: String
     Default: landingzone
+
+Conditions:
+  IsTest: !Equals [ !Ref Environment, prod ]
 
 Resources:
   ArtifactStoreBucket:
@@ -124,6 +127,9 @@ Resources:
         Type: S3
         Location: !Ref ArtifactStoreBucket
       Stages:
+        # -------------------------
+        # Source Stage
+        # -------------------------
         - Name: Source
           Actions:
             - Name: GitHubSource
@@ -140,6 +146,9 @@ Resources:
               OutputArtifacts:
                 - Name: SourceArtifact
 
+        # -------------------------
+        # Create Change Set Stage
+        # -------------------------
         - Name: Deploy
           Actions:
             - Name: CreateChangeSet
@@ -156,10 +165,31 @@ Resources:
                 StackName: !Sub "${ApplicationName}-root-${Environment}"
                 ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
                 TemplatePath: SourceArtifact::cloudformation/root-stack.yaml
-                TemplateConfiguration: !Sub "SourceArtifact::pipeline-params/${PipelineParameterFileName}"
+                TemplateConfiguration: !Sub "SourceArtifact::infra-params/${PipelineParameterFileName}"
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               RunOrder: 1
 
+        # ------------------------------------------
+        # Conditional Manual Approval Stage for Prod
+        # ------------------------------------------
+        - !If
+          - IsTest
+          - Name: ManualApproval
+            Actions:
+              - Name: WaitForApproval
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: "1"
+                RunOrder: 1
+          - !Ref AWS::NoValue
+
+        # -------------------------
+        # Execute Change Set Stage
+        # -------------------------
+        - Name: Execute
+          Actions:
             - Name: ExecuteChangeSet
               ActionTypeId:
                 Category: Deploy
@@ -173,4 +203,4 @@ Resources:
                 RoleArn: !GetAtt CFNRole.Arn
                 StackName: !Sub "${ApplicationName}-root-${Environment}"
                 ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
-              RunOrder: 2
+              RunOrder: 1
