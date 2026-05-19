@@ -6,5 +6,6 @@
   { "ParameterKey": "Environment", "ParameterValue": "prod" },
   { "ParameterKey": "PipelineParameterFileName", "ParameterValue": "prod.json" },
   { "ParameterKey": "MainCodePipelineName", "ParameterValue": "kingston-rds" },
-  { "ParameterKey": "ApplicationName", "ParameterValue": "kingston-rds" }
+  { "ParameterKey": "ApplicationName", "ParameterValue": "kingston-rds" },
+  { "ParameterKey": "KmsKeyArn", "ParameterValue": "" }
 ]
