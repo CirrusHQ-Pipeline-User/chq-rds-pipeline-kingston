@@ -165,7 +165,7 @@ Resources:
                 StackName: !Sub "${ApplicationName}-root-${Environment}"
                 ChangeSetName: !Sub "${ApplicationName}-changeset-${Environment}"
                 TemplatePath: SourceArtifact::cloudformation/root-stack.yaml
-                TemplateConfiguration: !Sub "SourceArtifact::pipeline-params/${PipelineParameterFileName}"
+                TemplateConfiguration: !Sub "SourceArtifact::infra-params/${PipelineParameterFileName}"
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
               RunOrder: 1
 
