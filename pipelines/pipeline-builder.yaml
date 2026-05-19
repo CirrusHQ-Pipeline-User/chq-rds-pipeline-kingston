@@ -23,7 +23,7 @@ Parameters:
     Type: String
     Description: Deployment environment
     AllowedValues:
-      - dev
+      - prod
       - test
 
   PipelineParameterFileName:
