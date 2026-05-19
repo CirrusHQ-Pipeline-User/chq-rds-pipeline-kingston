@@ -1,0 +1,10 @@
+[
+  { "ParameterKey": "RepoOwner", "ParameterValue": "CirrusHQ-Pipeline-User" },
+  { "ParameterKey": "RepoName", "ParameterValue": "chq-rds-pipeline-kingston" },
+  { "ParameterKey": "RepoBranch", "ParameterValue": "prod" },
+  { "ParameterKey": "CodeStarConnection", "ParameterValue": "119694c1-8080-4bac-b915-4840a89542d2" },
+  { "ParameterKey": "Environment", "ParameterValue": "prod" },
+  { "ParameterKey": "PipelineParameterFileName", "ParameterValue": "prod.json" },
+  { "ParameterKey": "MainCodePipelineName", "ParameterValue": "kingston-rds" },
+  { "ParameterKey": "ApplicationName", "ParameterValue": "kingston-rds" }
+]
