@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Root stack for environment (DEV/TEST) using nested stacks
+Description: Root stack for environment (PROD/TEST) using nested stacks
 
 Parameters:
   EnvironmentName:
