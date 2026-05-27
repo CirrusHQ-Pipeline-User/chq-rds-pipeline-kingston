@@ -11,7 +11,7 @@
     "DBName": "testdb",
     "DBUsername": "testuser",
     "DBPassword": "CHANGE_ME_TEST",
-    "DBInstanceClass": "db.t3.micro",
+    "DBInstanceClass": "db.t3.small",
     "AllocatedStorage": "20",
     "Engine": "mysql"
   }
