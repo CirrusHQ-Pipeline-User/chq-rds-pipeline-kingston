@@ -1,44 +1,56 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Root stack
+Description: Root stack to deploy VPC, RDS and EC2 nested stacks
 
 Parameters:
 
   EnvironmentName:
     Type: String
+    Default: test
 
   VpcCidr:
     Type: String
+    Default: 10.0.0.0/16
 
   PublicSubnet1Cidr:
     Type: String
+    Default: 10.0.1.0/24
 
   PublicSubnet2Cidr:
     Type: String
+    Default: 10.0.2.0/24
 
   PrivateSubnet1Cidr:
     Type: String
+    Default: 10.0.11.0/24
 
   PrivateSubnet2Cidr:
     Type: String
+    Default: 10.0.12.0/24
 
   DBName:
     Type: String
+    Default: appdb
 
   DBUsername:
     Type: String
+    Default: admin
 
   DBPassword:
     Type: String
     NoEcho: true
+    Default: Password123!
 
   DBInstanceClass:
     Type: String
+    Default: db.t3.micro
 
   AllocatedStorage:
     Type: Number
+    Default: 20
 
   Engine:
     Type: String
+    Default: mysql
 
 Resources:
 
@@ -57,6 +69,7 @@ Resources:
 
   RDSStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${AWS::AccountId}-${AWS::Region}-cf-templates/rds-stack.yaml"
 
@@ -74,6 +87,7 @@ Resources:
 
   EC2Stack:
     Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${AWS::AccountId}-${AWS::Region}-cf-templates/ec2-stack.yaml"
 
@@ -85,13 +99,33 @@ Resources:
 Outputs:
 
   VpcId:
+    Description: VPC ID
     Value: !GetAtt VPCStack.Outputs.VpcId
 
+  PublicSubnet1Id:
+    Description: Public Subnet 1 ID
+    Value: !GetAtt VPCStack.Outputs.PublicSubnet1Id
+
+  PublicSubnet2Id:
+    Description: Public Subnet 2 ID
+    Value: !GetAtt VPCStack.Outputs.PublicSubnet2Id
+
+  PrivateSubnet1Id:
+    Description: Private Subnet 1 ID
+    Value: !GetAtt VPCStack.Outputs.PrivateSubnet1Id
+
+  PrivateSubnet2Id:
+    Description: Private Subnet 2 ID
+    Value: !GetAtt VPCStack.Outputs.PrivateSubnet2Id
+
   DBEndpoint:
+    Description: RDS Endpoint
     Value: !GetAtt RDSStack.Outputs.DBEndpoint
 
   EC2InstanceId:
+    Description: EC2 Instance ID
     Value: !GetAtt EC2Stack.Outputs.InstanceId
 
   EC2PublicIp:
+    Description: EC2 Public IP
     Value: !GetAtt EC2Stack.Outputs.PublicIp
