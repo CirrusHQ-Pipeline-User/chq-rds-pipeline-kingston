@@ -1,40 +1,52 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Root stack for environment (PROD/TEST) using nested stacks
+Description: Root stack
 
 Parameters:
+
   EnvironmentName:
     Type: String
 
   VpcCidr:
     Type: String
+
   PublicSubnet1Cidr:
     Type: String
+
   PublicSubnet2Cidr:
     Type: String
+
   PrivateSubnet1Cidr:
     Type: String
+
   PrivateSubnet2Cidr:
     Type: String
 
   DBName:
     Type: String
+
   DBUsername:
     Type: String
+
   DBPassword:
     Type: String
     NoEcho: true
+
   DBInstanceClass:
     Type: String
+
   AllocatedStorage:
     Type: Number
+
   Engine:
     Type: String
 
 Resources:
+
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${AWS::AccountId}-${AWS::Region}-cf-templates/vpc-stack.yaml"
+
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VpcCidr: !Ref VpcCidr
@@ -47,6 +59,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${AWS::AccountId}-${AWS::Region}-cf-templates/rds-stack.yaml"
+
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         DBName: !Ref DBName
@@ -59,9 +72,26 @@ Resources:
         PrivateSubnet2Id: !GetAtt VPCStack.Outputs.PrivateSubnet2Id
         VpcId: !GetAtt VPCStack.Outputs.VpcId
 
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${AWS::AccountId}-${AWS::Region}-cf-templates/ec2-stack.yaml"
+
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        PublicSubnet1Id: !GetAtt VPCStack.Outputs.PublicSubnet1Id
+
 Outputs:
+
   VpcId:
     Value: !GetAtt VPCStack.Outputs.VpcId
 
   DBEndpoint:
     Value: !GetAtt RDSStack.Outputs.DBEndpoint
+
+  EC2InstanceId:
+    Value: !GetAtt EC2Stack.Outputs.InstanceId
+
+  EC2PublicIp:
+    Value: !GetAtt EC2Stack.Outputs.PublicIp
