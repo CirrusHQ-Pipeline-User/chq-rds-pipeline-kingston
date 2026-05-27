@@ -22,7 +22,7 @@ if (-not $bucketExists) {
 aws s3 cp "cloudformation/vpc-stack.yaml" "s3://$BucketName/vpc-stack.yaml"
 aws s3 cp "cloudformation/rds-stack.yaml" "s3://$BucketName/rds-stack.yaml"
 aws s3 cp "cloudformation/root-stack.yaml" "s3://$BucketName/root-stack.yaml"
-aws s3 cp "cloudformation/root-stack.yaml" "s3://$BucketName/ec2-stack.yaml"
+aws s3 cp "cloudformation/ec2-stack.yaml" "s3://$BucketName/ec2-stack.yaml"
 
 Write-Host ""
 Write-Host "Upload complete."
