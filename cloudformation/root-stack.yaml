@@ -100,10 +100,6 @@ Outputs:
     Description: Private Subnet 2 ID
     Value: !GetAtt VPCStack.Outputs.PrivateSubnet2Id
 
-  DBEndpoint:
-    Description: RDS Endpoint
-    Value: !GetAtt RDSStack.Outputs.DBEndpoint
-
   EC2InstanceId:
     Description: EC2 Instance ID
     Value: !GetAtt EC2Stack.Outputs.InstanceId
