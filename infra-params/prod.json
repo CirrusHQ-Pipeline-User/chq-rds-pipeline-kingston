@@ -11,7 +11,7 @@
     "DBName": "devdb",
     "DBUsername": "devuser",
     "DBPassword": "CHANGE_ME_DEV",
-    "DBInstanceClass": "db.t3.micro",
+    "DBInstanceClass": "db.t3.small",
     "AllocatedStorage": "20",
     "Engine": "mysql"
   }
