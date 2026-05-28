@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Nested VPC stack 
 
 Parameters:
+
   EnvironmentName:
     Type: String
 
@@ -21,6 +22,7 @@ Parameters:
     Type: String
 
 Mappings:
+
   RegionMap:
     eu-west-2:
       AZ1: eu-west-2a
@@ -35,14 +37,39 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
 
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-vpc"
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-igw"
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-rt"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -52,6 +79,10 @@ Resources:
       AvailabilityZone: !FindInMap [RegionMap, !Ref 'AWS::Region', AZ1]
       MapPublicIpOnLaunch: true
 
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-subnet-1"
+
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -60,12 +91,20 @@ Resources:
       AvailabilityZone: !FindInMap [RegionMap, !Ref 'AWS::Region', AZ2]
       MapPublicIpOnLaunch: true
 
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-subnet-2"
+
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet1Cidr
       AvailabilityZone: !FindInMap [RegionMap, !Ref 'AWS::Region', AZ1]
+
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-subnet-1"
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -74,19 +113,44 @@ Resources:
       CidrBlock: !Ref PrivateSubnet2Cidr
       AvailabilityZone: !FindInMap [RegionMap, !Ref 'AWS::Region', AZ2]
 
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-subnet-2"
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
 Outputs:
 
   VpcId:
+    Description: VPC ID
     Value: !Ref VPC
 
   PublicSubnet1Id:
+    Description: Public Subnet 1 ID
     Value: !Ref PublicSubnet1
 
   PublicSubnet2Id:
+    Description: Public Subnet 2 ID
     Value: !Ref PublicSubnet2
 
   PrivateSubnet1Id:
+    Description: Private Subnet 1 ID
     Value: !Ref PrivateSubnet1
 
   PrivateSubnet2Id:
+    Description: Private Subnet 2 ID
     Value: !Ref PrivateSubnet2
+
+  PublicRouteTableId:
+    Description: Public Route Table ID
+    Value: !Ref PublicRouteTable
