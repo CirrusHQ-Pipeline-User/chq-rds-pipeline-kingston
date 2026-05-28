@@ -33,7 +33,8 @@ Resources:
 
     Properties:
 
-      InstanceType: t3.small
+      InstanceType: t3.micro
+      
 
       ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
 
